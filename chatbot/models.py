@@ -3,7 +3,17 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db import models
 from django.conf import settings
+from django.utils import timezone 
 
+
+class DocumentEmbedding(models.Model):
+    content = models.TextField()  # Stores document content
+    embedding = models.BinaryField()  # Stores the embedding vector as binary data
+    source_url = models.URLField(null=True, blank=True)  # Optional field for the source URL
+    metadata = models.JSONField(null=True, blank=True)  # Optional metadata for document
+
+    def __str__(self):
+        return f"Document from {self.source_url or 'unknown source'}"
 
 class Conversation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -19,7 +29,7 @@ class Conversation(models.Model):
 
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)
-    sender = models.CharField(max_length=50)  # 'user' or 'bot'
+    sender = models.CharField(max_length=50)  
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -29,20 +39,11 @@ class Message(models.Model):
 class AIResponse(models.Model):
     message = models.OneToOneField(Message, on_delete=models.CASCADE, related_name='ai_response')
     response_text = models.TextField()
-    confidence_score = models.DecimalField(max_digits=5, decimal_places=2)
-    response_time = models.DecimalField(max_digits=5, decimal_places=2)  # Time taken to generate response in seconds
-    
-    def __str__(self):
-        return f"Response: {self.response_text[:50]}... (Confidence: {self.confidence_score})"
 
 class UserFeedback(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
-    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])  # 1 to 5 rating
     comments = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Feedback for Conversation {self.conversation.id}: Rating {self.rating}"
 
 class Intent(models.Model):
     name = models.CharField(max_length=100)
@@ -50,6 +51,14 @@ class Intent(models.Model):
     
     def __str__(self):
         return self.name
+
+class UploadedPDF(models.Model):
+    # A field to store the file itself
+    pdf_file = models.FileField(upload_to='uploads/pdfs/', verbose_name="PDF File")
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="Upload Time")
+    
+    def __str__(self):
+        return self.pdf_file.name
 
 class Entity(models.Model):
     name = models.CharField(max_length=100)

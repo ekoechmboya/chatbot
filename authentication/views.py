@@ -1,8 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from validate_email import validate_email
 from django.contrib.auth.models import User
-from .utils import generate_token, send_activation_email, activate_user
 from django.contrib.auth import authenticate, login, logout
 
 
@@ -60,5 +58,5 @@ def logout_view(request):
     return redirect('login')
 
 def chat_home(request):
-    return render(request, 'chatbot/chat.html')
+    return render(request, 'chatbot/chat_page.html')
 
