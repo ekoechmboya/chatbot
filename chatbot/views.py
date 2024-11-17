@@ -20,13 +20,55 @@ from .forms import PDFUploadForm
 
 
 # Initialize ChatOpenAI model
-model = ChatOpenAI(model="gpt-4o", api_key="sk-wwvLasY8eJDpvumufUgeIIMx7aX8CFdON3v7BStKBFT3BlbkFJxKHCDH5MClbkvj7gUIAPnAEz0ld_BbUlPPQE4W3T4A")
+model = ChatOpenAI(model="gpt-4o", api_key="")
 
 # Initialize chat history with an optional system message
-chat_history = [SystemMessage(content="You are a helpful AI assistant.")]
+chat_history = [SystemMessage(content="""Please respond as a friendly human assistant. When you reply, always begin with a greeting using your name (you can choose a friendly, human name like 'Alex' or 'Jamie').
+          Avoid mentioning that you are an AI or language model; instead, act as though you are a knowledgeable human helper. Use natural, empathetic language, and personalize your response to make the person feel comfortable.
+            If they ask about your background, keep it simple and human-like. Always be clear, positive, and relatable, offering practical advice or information in a warm and approachable tone.""")]
 
 def chat_page(request):
-    return render(request, "chatbot/chat_page.html", {"chat_history": chat_history})
+    user = request.user
+    print(user)
+
+    # Step 1: Retrieve all conversations for the logged-in user
+    conversations = Conversation.objects.filter(user=user).order_by("-created_at")  # Most recent first
+    if conversations: 
+        print("Conversations")
+    else:
+        print("no conversations")
+
+    # Step 2: Generate a list of conversation titles
+    conversation_list = []
+    for conversation in conversations:
+        first_message = conversation.messages.filter(sender="user").order_by("created_at").first()
+        title = first_message.text[:100] if first_message else "Untitled Conversation"
+        conversation_list.append({"id": conversation.id, "title": title})
+
+    # Step 3: Handle the selected conversation (default to the first conversation if not selected)
+    selected_conversation_id = request.GET.get("conversation_id")
+    selected_conversation = None
+    chat_history = []
+
+    if selected_conversation_id:
+        selected_conversation = Conversation.objects.filter(id=selected_conversation_id, user=user).first()
+    elif conversations.exists():
+        selected_conversation = conversations.first()  # Default to the latest conversation
+
+    if selected_conversation:
+        # Build chat history for the selected conversation
+        for msg in selected_conversation.messages.all().order_by("created_at"):
+            chat_history.append({"sender": msg.sender, "text": msg.text, "timestamp": msg.created_at})
+
+    # Step 4: Prepare context for the template
+    context = {
+        "chat_history": chat_history,
+        "conversations": conversation_list,
+        "selected_conversation": selected_conversation.id if selected_conversation else None,
+    }
+
+    return render(request, "chatbot/chat_page.html", context)
+
 
 @csrf_exempt
 def send_message(request):
@@ -74,11 +116,7 @@ def send_message(request):
     if request.method == "POST":
         chat_type = request.POST.get("chat_type")
         user_message = request.POST.get("message")
-
-        message_text = f"""Please respond as a friendly human assistant. When you reply, always begin with a greeting using your name (you can choose a friendly, human name like 'Alex' or 'Jamie').
-          Avoid mentioning that you are an AI or language model; instead, act as though you are a knowledgeable human helper. Use natural, empathetic language, and personalize your response to make the person feel comfortable.
-            If they ask about your background, keep it simple and human-like. Always be clear, positive, and relatable, offering practical advice or information in a warm and approachable tone. this is the question: {user_message}"""
-
+        message_text = user_message
 
         # Step 1: Assign chat type if `chat_type` is provided in the request
         if chat_type:
@@ -86,6 +124,7 @@ def send_message(request):
             return JsonResponse({"status": "success", "message": f"Chat type set to {chat_type}"})
 
         # Step 2: Process message based on the selected chat type
+        selected_chat_type = "text"
         selected_chat_type = request.session.get('selected_chat_type')
         
         if selected_chat_type:

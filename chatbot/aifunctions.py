@@ -42,7 +42,7 @@ def format_ai_response(content):
     return format_html(content)
 
 # Ensure API key for OpenAI or other LLM provider is set
-api_key="sk-wwvLasY8eJDpvumufUgeIIMx7aX8CFdON3v7BStKBFT3BlbkFJxKHCDH5MClbkvj7gUIAPnAEz0ld_BbUlPPQE4W3T4A"
+api_key=""
 
 # Create a ChatOpenAI model
 model = ChatOpenAI(model="gpt-4o", api_key=api_key)
