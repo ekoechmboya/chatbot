@@ -6,69 +6,82 @@
 <div class="center-container">
 <!-- Sidebar: Chat Options -->
 <div class="center-left">
-    <div class="contacts">
-        <i class="fas fa-bars fa-2x"></i>
-        <h2>Chat Options</h2>
-
-        <!-- Text Chat Option -->
-        <div class="contact" 
-            hx-post="{% url 'send_message' %}" 
-            hx-vals='{"chat_type": "text"}' 
-            hx-trigger="click" 
-            hx-swap="none" 
-            onclick="highlightSelected(this); toggleUploadLink(false);">
-            <div class="name">Text Chat</div><br>
-            <div class="message">
-                Chat using simple text messages.
+    <div class="container my-4">
+        <div class="row mb-3">
+            <div class="col-12 d-flex align-items-center">
+                <i class="fas fa-bars fa-2x me-2"></i>
+                <h2 class="mb-0">Chat Options</h2>
             </div>
         </div>
-
-        <!-- PDF Chat Option -->
-        <div class="contact pdf-chat" 
-            hx-post="{% url 'send_message' %}" 
-            hx-vals='{"chat_type": "pdf"}' 
-            hx-trigger="click" 
-            hx-swap="none" 
-            onclick="highlightSelected(this); toggleUploadLink(true);">
-            <div class="name">PDF Chat</div><br>
-            <div class="message">
-                Chat based on  PDF content.
+    
+        <div class="row g-3">
+            <!-- Text Chat Option -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card contact shadow-sm h-100" 
+                     hx-post="{% url 'send_message' %}" 
+                     hx-vals='{"chat_type": "text"}' 
+                     hx-trigger="click" 
+                     hx-swap="none" 
+                     onclick="highlightSelected(this); toggleUploadLink(false);">
+                    <div class="card-body">
+                        <h3 class="card-title">Text Chat</h3>
+                        <p class="card-text">Chat using simple text messages.</p>
+                    </div>
+                </div>
             </div>
-            <br>
-            <!-- Upload PDF Link -->
-            <div class="upload-container">
-                <a href="{% url 'handle_pdf_upload' %}" class="upload-link">
-                    <i class="fas fa-upload"></i> Upload PDF
-                </a>
+    
+            <!-- PDF Chat Option -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card contact pdf-chat shadow-sm h-100" 
+                     hx-post="{% url 'send_message' %}" 
+                     hx-vals='{"chat_type": "pdf"}' 
+                     hx-trigger="click" 
+                     hx-swap="none" 
+                     onclick="highlightSelected(this); toggleUploadLink(true);">
+                    <div class="card-body">
+                        <h3 class="card-title">PDF Chat</h3>
+                        <p class="card-text">Chat based on PDF content.</p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'handle_pdf_upload' %}" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Upload PDF
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- Website Chat Option -->
-        <div class="contact" 
-            hx-post="{% url 'send_message' %}" 
-            hx-vals='{"chat_type": "website"}' 
-            hx-trigger="click" 
-            hx-swap="none" 
-            onclick="highlightSelected(this); toggleUploadLink(false);">
-            <div class="name">Website Chat</div><br>
-            <div class="message">
-                Chat with content from a website.
+    
+            <!-- Website Chat Option -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card contact shadow-sm h-100" 
+                     hx-post="{% url 'send_message' %}" 
+                     hx-vals='{"chat_type": "website"}' 
+                     hx-trigger="click" 
+                     hx-swap="none" 
+                     onclick="highlightSelected(this); toggleUploadLink(false);">
+                    <div class="card-body">
+                        <h3 class="card-title">Website Chat</h3>
+                        <p class="card-text">Chat with content from a website.</p>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- Feedback Option -->
-        <div class="contact" 
-            hx-post="{% url 'send_message' %}" 
-            hx-vals='{"chat_type": "feedback"}' 
-            hx-trigger="click" 
-            hx-swap="none" 
-            onclick="highlightSelected(this); toggleUploadLink(false);">
-            <div class="name">Feedback</div><br>
-            <div class="message">
-                Give Feedback About this Chatbot.
+    
+            <!-- Feedback Option -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card contact shadow-sm h-100" 
+                     hx-post="{% url 'send_message' %}" 
+                     hx-vals='{"chat_type": "feedback"}' 
+                     hx-trigger="click" 
+                     hx-swap="none" 
+                     onclick="highlightSelected(this); toggleUploadLink(false);">
+                    <div class="card-body">
+                        <h3 class="card-title">Feedback</h3>
+                        <p class="card-text">Give Feedback About this Chatbot.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
 </div>
 
     <!-- Main Chat Section -->
@@ -82,19 +95,13 @@
             </div>
 
             <!-- Chat Messages -->
-            <div class="messages" id="chat">
+            <div class="messages" id="messages">
                 <div class="chat-messages" id="chat-messages">
                     {% for message in messages %}
                         {% include "chatbot/message.html" %}
                     {% endfor %}
                 </div>
-
-                <!-- Typing Indicator -->
-                <div class="message bot typing-indicator">
-                    <div class="typing typing-1"></div>
-                    <div class="typing typing-2"></div>
-                    <div class="typing typing-3"></div>
-                </div>
+                <div id="scroll-target" class="message bot">Type on the chat section to continue or start a new conversation</div>
             </div>
 
             <!-- Input Section -->

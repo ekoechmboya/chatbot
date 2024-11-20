@@ -1,7 +1,7 @@
 from datetime import timezone
 import os
 import re
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.http import HttpResponse, JsonResponse
 from HumanChatbot import settings
 from langchain_openai import ChatOpenAI
@@ -35,43 +35,7 @@ def chat_page(request):
     user = request.user
     print(user)
 
-    # Step 1: Retrieve all conversations for the logged-in user
-    conversations = Conversation.objects.filter(user=user).order_by("-created_at")  # Most recent first
-    if conversations: 
-        print("Conversations")
-    else:
-        print("no conversations")
-
-    # Step 2: Generate a list of conversation titles
-    conversation_list = []
-    for conversation in conversations:
-        first_message = conversation.messages.filter(sender="user").order_by("created_at").first()
-        title = first_message.text[:100] if first_message else "Untitled Conversation"
-        conversation_list.append({"id": conversation.id, "title": title})
-
-    # Step 3: Handle the selected conversation (default to the first conversation if not selected)
-    selected_conversation_id = request.GET.get("conversation_id")
-    selected_conversation = None
-    chat_history = []
-
-    if selected_conversation_id:
-        selected_conversation = Conversation.objects.filter(id=selected_conversation_id, user=user).first()
-    elif conversations.exists():
-        selected_conversation = conversations.first()  # Default to the latest conversation
-
-    if selected_conversation:
-        # Build chat history for the selected conversation
-        for msg in selected_conversation.messages.all().order_by("created_at"):
-            chat_history.append({"sender": msg.sender, "text": msg.text, "timestamp": msg.created_at})
-
-    # Step 4: Prepare context for the template
-    context = {
-        "chat_history": chat_history,
-        "conversations": conversation_list,
-        "selected_conversation": selected_conversation.id if selected_conversation else None,
-    }
-
-    return render(request, "chatbot/chat_page.html", context)
+    return render(request, "chatbot/chat_page.html")
 
 
 @csrf_exempt
@@ -389,10 +353,7 @@ def handle_pdf_upload(request):
             print(upload_path, source_name)
             process_pdf_embeddings(upload_path, source_name)
             # Return a success message we absolute URL
-            return JsonResponse({
-                "status": "success",
-                "message": "File uploaded successfully!",
-            })
+            return redirect("chat_page")
         else:
             return JsonResponse({"status": "error", "message": "Invalid file. Please upload a valid PDF."})
     

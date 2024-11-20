@@ -135,7 +135,7 @@ body, html {
 
 .chat .messages {
   flex-grow: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   padding: 1rem;
   background: #f7f7f7;
 }
@@ -424,7 +424,35 @@ body, html {
 </style>
 
 <script>
+  // Function to scroll to the target div
+  function scrollToTarget() {
+      const target = document.getElementById("scroll-target");
+      if (target) {
+          target.scrollIntoView({ behavior: "smooth" }); // Scrolls smoothly to the target
+      } else {
+          console.error("Target element with ID 'scroll-target' not found.");
+      }
+  }
 
+  // Scroll to the target on page load
+  window.onload = function () {
+      scrollToTarget();
+  };
+
+  // Scroll when new messages are added
+  const chatMessagesContainer = document.getElementById("chat-messages");
+  if (chatMessagesContainer) {
+      const observer = new MutationObserver(() => {
+          scrollToTarget();
+      });
+
+      // Observe child node changes (e.g., new messages added)
+      observer.observe(chatMessagesContainer, { childList: true });
+  }
+</script>
+
+
+<script>
     // Automatically scroll to the bottom of the chat messages
     function scrollToBottom() {
         const chatContainer = document.getElementById("chat-container");
