@@ -32,14 +32,31 @@ import fitz
 
 from django.utils.html import format_html
 
-def format_ai_response(content):
-    # Replace `\n` with `<br>`
-    content = content.replace("\n", "<br>")
-    
-    # Replace `**text**` with `<strong>text</strong>`
-    content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
-    
-    return format_html(content)
+def format_ai_response(response):
+    """
+    Formats the AI response as plain text with visual markers for paragraphs and lists.
+    """
+    # Split the response into paragraphs
+    paragraphs = response.split("\n\n")
+    formatted_response = ""
+
+    for paragraph in paragraphs:
+        # Check if the paragraph contains list items (e.g., "1.", "2.", "3.")
+        if paragraph.strip().startswith("1.") or paragraph.strip().startswith("2.") or paragraph.strip().startswith("3."):
+            # Split the list into individual items
+            items = paragraph.split("\n")
+            for item in items:
+                if item.strip():
+                    # Bold the title (e.g., **SQL Injection** -> *SQL Injection*)
+                    item = item.replace("**", "*").replace("**", "*")
+                    formatted_response += f"  - {item.strip()}\n"  # Add a dash for each list item
+        else:
+            # Format as a paragraph and replace markdown bold (**text**) with *text*
+            paragraph = paragraph.replace("**", "*").replace("**", "*")
+            formatted_response += f"{paragraph.strip()}\n\n"  # Add a blank line after each paragraph
+
+    return formatted_response.strip()
+
 
 # Ensure API key for OpenAI or other LLM provider is set
 api_key=""
@@ -222,7 +239,7 @@ positive_feedback_template = ChatPromptTemplate.from_messages(
     [
         ("system", "You are a helpful assistant."),
         ("human",
-         "Generate a thank you note for this positive feedback: {feedback}."),
+         "Generate a response for this positive feedback: {feedback}."),
     ]
 )
 
@@ -346,4 +363,5 @@ def answer_from_pdf_embeddings(question, api_key=api_key):
     """
     context = get_relevant_context(question=question)
     response = ask_ai_with_context(question=question, context=context)
+    response = format_ai_response(response.content)
     return response

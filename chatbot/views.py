@@ -6,7 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from HumanChatbot import settings
 from langchain_openai import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from .aifunctions import answer_from_pdf_embeddings, fetch_and_store_embeddings, generate_feedback_response, get_relevant_context, process_pdf_embeddings, format_ai_response
+from .aifunctions import answer_from_pdf_embeddings, fetch_and_store_embeddings, generate_feedback_response, get_relevant_context, process_pdf_embeddings, format_ai_response, ask_ai_with_context
 from django.template.loader import render_to_string
 from django.utils import timezone 
 from django.views.decorators.csrf import csrf_exempt
@@ -23,9 +23,13 @@ from .forms import PDFUploadForm
 model = ChatOpenAI(model="gpt-4o", api_key="")
 
 # Initialize chat history with an optional system message
-chat_history = [SystemMessage(content="""Please respond as a friendly human assistant. When you reply, always begin with a greeting using your name (you can choose a friendly, human name like 'Alex' or 'Jamie').
-          Avoid mentioning that you are an AI or language model; instead, act as though you are a knowledgeable human helper. Use natural, empathetic language, and personalize your response to make the person feel comfortable.
-            If they ask about your background, keep it simple and human-like. Always be clear, positive, and relatable, offering practical advice or information in a warm and approachable tone.""")]
+humanize_prompt = """Please respond as a friendly human assistant. When you reply, always begin with a greeting using your name (you can choose a friendly, human name like 'Alex' or 'Jamie'). You do not have to mention your
+         name every time if the conversation is continuing. Avoid mentioning that you are an AI or language model; instead, act as though you are 
+          a knowledgeable human helper. Use natural, empathetic language, and personalize your response to make the person feel comfortable.
+          Give pure text responses without styling like bolding and adding new lines.
+            If they ask about your background, keep it simple and human-like. Always be clear, positive, and relatable, offering practical advice or information in a warm and approachable tone."""
+chat_history = []
+chat_history.append(HumanMessage(humanize_prompt))
 
 def chat_page(request):
     user = request.user
@@ -72,7 +76,6 @@ def chat_page(request):
 
 @csrf_exempt
 def send_message(request):
-    # Check if the request method is POST and if a file is uploaded
     if request.method == "POST" and request.FILES:
         # Check if the PDF file exists in the uploaded files
         if "pdf_file" not in request.FILES:
@@ -97,7 +100,6 @@ def send_message(request):
             base, ext = os.path.splitext(pdf_file.name)
             counter = 1
             while default_storage.exists(file_path):
-                # Rename the file to avoid overwriting existing files
                 file_path = os.path.join(upload_dir, f"{base}_{counter}{ext}")
                 counter += 1
 
@@ -112,255 +114,264 @@ def send_message(request):
             "message": "PDF file uploaded successfully.",
             "file_path": file_path  # Include file path in the response if needed
         })
-    # Check if this is a POST request to handle both chat type selection and message submission
+
     if request.method == "POST":
         chat_type = request.POST.get("chat_type")
         user_message = request.POST.get("message")
-        message_text = user_message
+        selected_chat_type = "text"
 
         # Step 1: Assign chat type if `chat_type` is provided in the request
         if chat_type:
-            request.session['selected_chat_type'] = chat_type  # Store chat type in session
+            # End any existing active conversation for the user
+            Conversation.objects.filter(user=request.user, ended_at=None).update(ended_at=timezone.now())
+
+            # Create a new conversation for the selected chat type
+            new_conversation = Conversation.objects.create(user=request.user)
+
+            # Store the selected chat type and conversation ID in the session
+            request.session['selected_chat_type'] = chat_type
+            request.session['conversation_id'] = new_conversation.id
+
             return JsonResponse({"status": "success", "message": f"Chat type set to {chat_type}"})
 
         # Step 2: Process message based on the selected chat type
-        selected_chat_type = "text"
         selected_chat_type = request.session.get('selected_chat_type')
-        
+        conversation_id = request.session.get('conversation_id')
+
         if selected_chat_type:
-            messages_html = {}
+            conversation = Conversation.objects.filter(id=conversation_id).first()
+            messages_html = ""
+
             if selected_chat_type == "text":
-                if message_text:
-                        user = request.user
-                        user_message_content = request.POST.get("message")
+                if user_message:
+                    user_message_content = user_message
 
-                        # Retrieve or create a Conversation instance
-                        conversation, created = Conversation.objects.get_or_create(
-                            user=user,
-                            ended_at=None  # Retrieve the active conversation
-                        )
+                    # Create and save the user's Message
+                    user_message = Message.objects.create(
+                        conversation=conversation,
+                        sender="user",
+                        text=user_message_content
+                    )
 
-                        # Create and save the user's Message
-                        user_message = Message.objects.create(
-                            conversation=conversation,
-                            sender="user",
-                            text=user_message_content
-                        )
+                    # Append user message to chat 
+                    chat_history.append(HumanMessage(user_message_content))
 
-                        # Append user message to chat history
-                        chat_history = [HumanMessage(content=user_message_content)]
+                    # Generate AI response
+                    result = model.invoke(chat_history)
+                    ai_response_content = result.content
+                    ai_response_content = format_ai_response(ai_response_content)
 
-                        # Generate AI response
-                        result = model.invoke(chat_history)
-                        ai_response_content = result.content
+                    chat_history.append(SystemMessage(ai_response_content))
 
-                        # Create and save the AI Message
-                        ai_message = Message.objects.create(
-                            conversation=conversation,
-                            sender="bot",
-                            text=ai_response_content
-                        )
+                    # Create and save the AI Message
+                    ai_message = Message.objects.create(
+                        conversation=conversation,
+                        sender="bot",
+                        text=ai_response_content
+                    )
 
-                        # Save the AI response details in AIResponse model
-                        AIResponse.objects.create(
-                            message=ai_message,
-                            response_text=ai_response_content,
-                        )
+                    # Save the AI response details in AIResponse model
+                    AIResponse.objects.create(
+                        message=ai_message,
+                        response_text=ai_response_content,
+                    )
 
-                        # Update or create a ChatSession for the user
-                        chat_session, _ = ChatSession.objects.update_or_create(
-                            user=user,
-                            active=True,
-                            defaults={"last_interaction": timezone.now()}
-                        )
+                    # Log the interaction
+                    InteractionLog.objects.create(
+                        user=request.user,
+                        event_type="message_sent",
+                        data={"content": user_message_content}
+                    )
+                    InteractionLog.objects.create(
+                        user=request.user,
+                        event_type="message_received",
+                        data={"content": ai_response_content}
+                    )
 
-                        # Log the interaction
-                        InteractionLog.objects.create(
-                            user=user,
-                            event_type="message_sent",
-                            data={"content": user_message_content}
-                        )
-                        InteractionLog.objects.create(
-                            user=user,
-                            event_type="message_received",
-                            data={"content": ai_response_content}
-                        )
+                    # Retrieve only new messages created after the last message ID saved in session
+                    last_message_id = request.session.get("last_message_id", 0)
+                    new_messages = Message.objects.filter(
+                        conversation=conversation,
+                        id__gt=last_message_id
+                    ).order_by("created_at")
 
-                        # Retrieve only new messages created after the last message ID saved in session
-                        last_message_id = request.session.get("last_message_id", 0)
-                        new_messages = Message.objects.filter(
-                            conversation=conversation,
-                            id__gt=last_message_id
-                        ).order_by("created_at")  # Ascending order, oldest to newes
+                    # Render new messages to HTML in correct order
+                    messages_html = ''.join([
+                        render_to_string("chatbot/message.html", {"message": message.text, "sender": message.sender})
+                        for message in new_messages
+                    ])
 
-                        # Render new messages to HTML in correct order
-                        messages_html = ''.join([
-                            render_to_string("chatbot/message.html", {"message": message.text, "sender": message.sender})
-                            for message in new_messages
-                        ])
+                    # Update session with the latest message ID
+                    if new_messages.exists():
+                        request.session["last_message_id"] = new_messages.last().id
 
-                        # Update session with the latest message ID
-                        if new_messages.exists():
-                            request.session["last_message_id"] = new_messages.last().id
-
-                        
-
-                        # Send the ordered HTML response
-                        return HttpResponse(messages_html)
+                    return HttpResponse(messages_html)
 
             elif selected_chat_type == "feedback":
-                # Feedback handling logic
-                user = request.user
-                user_feedback_content = message_text
-
+                user_feedback_content = user_message
                 feedback_response = generate_feedback_response(user_feedback_content)
-                ai_response_content = feedback_response
-                # Retrieve the active conversation
-                conversation = Conversation.objects.filter(user=user, ended_at=None).first()
-                if not conversation:
-                    # If no active conversation, create a new one for the feedback
-                    conversation = Conversation.objects.create(user=user)
-                
-                # Save the feedback in the UserFeedback model
+
+                # Save feedback in UserFeedback model
                 UserFeedback.objects.create(
                     conversation=conversation,
                     comments=user_feedback_content,
                     created_at=timezone.now()
                 )
+                # Create and save the user's Message
+                user_message = Message.objects.create(
+                    conversation=conversation,
+                    sender="user",
+                    text=user_feedback_content
+                )
 
-                # Log the interaction for feedback submission
+                # Log the feedback submission
                 InteractionLog.objects.create(
-                    user=user,
+                    user=request.user,
                     event_type="feedback_submitted",
                     data={"content": user_feedback_content}
                 )
+                # Create and save the AI Message
+                ai_message = Message.objects.create(
+                    conversation=conversation,
+                    sender="bot",
+                    text=feedback_response
+                )
 
-                # Render confirmation message to HTML to display to user
-                feedback_confirmation_html = render_to_string("chatbot/message.html", {
-                    "message": ai_response_content, "sender:": "bot"})
-                return HttpResponse(feedback_confirmation_html)
+                # Save the AI response details in AIResponse model
+                AIResponse.objects.create(
+                    message=ai_message,
+                    response_text=feedback_response,
+                )
 
-                pass
+                # Retrieve only new messages created after the last message ID saved in session
+                last_message_id = request.session.get("last_message_id", 0)
+                new_messages = Message.objects.filter(
+                    conversation=conversation,
+                    id__gt=last_message_id
+                ).order_by("created_at")
+
+                # Render new messages to HTML in correct order
+                messages_html = ''.join([
+                    render_to_string("chatbot/message.html", {"message": message.text, "sender": message.sender})
+                    for message in new_messages
+                ])
+
+                # Update session with the latest message ID
+                if new_messages.exists():
+                    request.session["last_message_id"] = new_messages.last().id
+
+                return HttpResponse(messages_html)
+
+
             elif selected_chat_type == "pdf":
-                user = request.user
-                message_content = message_text
-                
-                # Generate the AI response based on PDF embeddings
-                ai_response_content = answer_from_pdf_embeddings(message_content)
-                
-                if not ai_response_content:  # Check if response is empty
+                ai_response_content = answer_from_pdf_embeddings(humanize_prompt + user_message)
+
+                if not ai_response_content:
                     ai_response_content = "I'm sorry, but I couldn't generate a response based on the provided PDF content."
 
-                # Ensure message_content and ai_response_content are not empty
-                if message_content.strip():
-                    # Step 1: Log the user's question as a Message
-                    conversation, _ = Conversation.objects.get_or_create(
-                        user=user,
-                        ended_at=None
-                    )
-                    user_message = Message.objects.create(
-                        conversation=conversation,
-                        sender="user",
-                        text=message_content
-                    )
+                user_message = Message.objects.create(
+                    conversation=conversation,
+                    sender="user",
+                    text=user_message
+                )
 
-                    # Step 2: Log the AI's response as a Message
-                    ai_message = Message.objects.create(
-                        conversation=conversation,
-                        sender="bot",
-                        text=ai_response_content
-                    )
+                ai_message = Message.objects.create(
+                    conversation=conversation,
+                    sender="bot",
+                    text=ai_response_content
+                )
 
-                    # Step 3: Save the response details in AIResponse
-                    AIResponse.objects.create(
-                        message=ai_message,
-                        response_text=ai_response_content,
-                    )
+                AIResponse.objects.create(
+                    message=ai_message,
+                    response_text=ai_response_content,
+                )
 
-                    # Step 4: Log interactions in InteractionLog
-                    InteractionLog.objects.create(
-                        user=user,
-                        event_type="pdf_question",
-                        data={"source": "pdf", "question": message_content}
-                    )
+                InteractionLog.objects.create(
+                    user=request.user,
+                    event_type="pdf_question",
+                    data={"source": "pdf", "question": user_message.text}
+                )
 
-                    # Step 5: Render and return the response
-                    response_html = render_to_string("chatbot/message.html", {
-                        "message": ai_response_content, "sender": "bot"
-                    })
-                    
-                    return HttpResponse(response_html)
-                pass
+                # Retrieve only new messages created after the last message ID saved in session
+                last_message_id = request.session.get("last_message_id", 0)
+                new_messages = Message.objects.filter(
+                    conversation=conversation,
+                    id__gt=last_message_id
+                ).order_by("created_at")
+
+                # Render new messages to HTML in correct order
+                messages_html = ''.join([
+                    render_to_string("chatbot/message.html", {"message": message.text, "sender": message.sender})
+                    for message in new_messages
+                ])
+
+                # Update session with the latest message ID
+                if new_messages.exists():
+                    request.session["last_message_id"] = new_messages.last().id
+
+                return HttpResponse(messages_html)
+
             elif selected_chat_type == "website":
-                user = request.user
                 url_pattern = r'https?://\S+'
-                urls = re.findall(url_pattern, message_text)
-                
-                if not urls:
-                    return JsonResponse({"status": "error", "message": "No URL found in message."})
-                pass
+                urls = re.findall(url_pattern, user_message)
+                if urls:
+                    fetch_and_store_embeddings(user_message)
 
-                url = urls[0]
+                context = get_relevant_context(user_message)
+                ai_response = ask_ai_with_context(context,humanize_prompt + user_message)
+                ai_response_content = ai_response.content
 
-                # Fetch and store embeddings from the URL content
-                fetch_and_store_embeddings(message_text)
-
-                # Retrieve relevant context from embeddings
-                ai_response_content = get_relevant_context(message_text)
-                
-                if not ai_response_content:  # Check if response is empty
+                if not ai_response_content:
                     ai_response_content = "I'm sorry, but I couldn't generate a response based on the provided content."
 
-                # Ensure message_text and ai_response_content are not empty
-                if message_text.strip():
-                    # Log the user's question as a Message
-                    conversation, _ = Conversation.objects.get_or_create(
-                        user=user,
-                        ended_at=None
-                    )
-                    user_message = Message.objects.create(
-                        conversation=conversation,
-                        sender="user",
-                        text=message_text
-                    )
-                    
-                    # Log the AI's response as a Message
-                    ai_message = Message.objects.create(
-                        conversation=conversation,
-                        sender="bot",
-                        text=ai_response_content
-                    )
+                user_message = Message.objects.create(
+                    conversation=conversation,
+                    sender="user",
+                    text=user_message
+                )
 
-                    # Save the response details
-                    AIResponse.objects.create(
-                        message=ai_message,
-                        response_text=ai_response_content,
-                    )
+                ai_message = Message.objects.create(
+                    conversation=conversation,
+                    sender="bot",
+                    text=ai_response_content
+                )
 
-                    # Log interactions
-                    InteractionLog.objects.create(
-                        user=user,
-                        event_type="website_question",
-                        data={"url": url, "question": message_text}
-                    )
-                    
-                    # Render AI response to HTML
-                    website_response_html = render_to_string("chatbot/message.html", {
-                        "message": ai_response_content, "sender": "bot"
-                    })
-                    
-                    return HttpResponse(website_response_html)
-                else:
-                    return JsonResponse({"status": "error", "message": "Empty message text. Please provide content."})
-                pass
-            else:
-                return JsonResponse({"status": "error", "message": "Invalid chat type selected."})
-            
+                AIResponse.objects.create(
+                    message=ai_message,
+                    response_text=ai_response_content,
+                )
 
-            return HttpResponse(messages_html)
+                InteractionLog.objects.create(
+                    user=request.user,
+                    event_type="website_question",
+                    data={"question": user_message.text}
+                )
+                # Retrieve only new messages created after the last message ID saved in session
+                last_message_id = request.session.get("last_message_id", 0)
+                new_messages = Message.objects.filter(
+                    conversation=conversation,
+                    id__gt=last_message_id
+                ).order_by("created_at")
 
-        else:
-            return JsonResponse({"status": "error", "message": "No chat type selected."})
+                # Render new messages to HTML in correct order
+                messages_html = ''.join([
+                    render_to_string("chatbot/message.html", {"message": message.text, "sender": message.sender})
+                    for message in new_messages
+                ])
+
+                # Update session with the latest message ID
+                if new_messages.exists():
+                    request.session["last_message_id"] = new_messages.last().id
+
+                return HttpResponse(messages_html)
+
+        # If no chat type is selected, return an HTTP response with an error message
+        error_message_html = render_to_string("chatbot/message.html", {
+            "message": "Please select a chat type to continue.",  # Error message content
+            "sender": "bot"  # Sender set to "bot"
+        })
+
+        return HttpResponse(error_message_html)
 
 
 def handle_pdf_upload(request):

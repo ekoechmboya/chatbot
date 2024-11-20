@@ -1,11 +1,10 @@
-
 {% extends 'authentication/base.html' %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <h2>HumanChat User Registration</h2>
+        <div class="col-lg-6 col-md-8 col-sm-10 col-12">
+            <h2 class="text-center">HumanChat User Registration</h2>
 
             {% if messages %}
                 <div class="alert alert-info" role="alert">
@@ -39,17 +38,45 @@
                     <input type="password" id="password2" name="password2" class="form-control" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Register</button>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 {% endblock %}
+
 <style>
     body {
-        background-image: url('https://picsum.photos/seed/picsum/200/300');
+        background-image: url('https://picsum.photos/seed/picsum/1920/1080');
         background-size: cover;
         background-repeat: no-repeat;
-        /* Other background properties */
+        background-attachment: fixed;
+        min-height: 100vh;
     }
-    </style>
+
+    .container {
+        background-color: rgba(255, 255, 255, 0.85);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        margin-bottom: 3rem; /* Adds extra space to prevent footer overlap */
+    }
+
+    @media (max-width: 768px) {
+        h2 {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
+    }
+</style>

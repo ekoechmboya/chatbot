@@ -7,305 +7,368 @@
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css'>
   <link rel="stylesheet" href="./style.css">
   <style>
-    @import url("https://fonts.googleapis.com/css?family=Red+Hat+Display:400,500,900&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Red+Hat+Display:400,500,900&display=swap");
+
+/* Global Styles */
 body, html {
-  font-family: Red hat Display, sans-serif;
+  font-family: 'Red Hat Display', sans-serif;
   font-weight: 400;
   line-height: 1.25em;
   letter-spacing: 0.025em;
   color: #333;
   background: #F7F7F7;
-}
-    /* Navbar Styles */
-    .navbar {
-      background: #00796b;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .navbar .logo {
-      font-size: 1.2rem;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-    }
-    .navbar .logo i {
-      margin-right: 0.3rem;
-    }
-    .navbar .nav-links {
-      display: flex;
-      align-items: center;
-    }
-    .navbar .nav-links a {
-      color: white;
-      text-decoration: none;
-      margin: 0 0.8rem;
-      font-size: 0.9rem;
-      transition: color 200ms;
-    }
-    .navbar .nav-links a:hover {
-      color: #e0f7fa;
-    }
-    .navbar .logout-btn {
-      background-color: #e57373;
-      border: none;
-      color: white;
-      padding: 0.3rem 0.8rem;
-      border-radius: 0.25rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background-color 200ms;
-    }
-    .navbar .logout-btn:hover {
-      background-color: #d32f2f;
-    }
-  .center {
-  position: absolute;
-  top: 50%;
-  left: calc(50% + 12rem);
-  transform: translate(-50%, -50%);
-}
-.center-left {
-  position: absolute;
-  top: 50%;
-  left: calc(15% + 12rem);
-  transform: translate(-15%, -50%);
+  margin: 0;
+  padding: 0;
 }
 
-.pic {
-  width: 4rem;
-  height: 4rem;
-  background-size: cover;
-  background-position: center;
-  border-radius: 50%;
-}
-
-.contact {
-  position: relative;
-  margin-bottom: 1rem;
-  padding-left: 5rem;
-  height: 4.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.contact .pic {
-  position: absolute;
-  left: 0;
-}
-.contact .name {
-  font-weight: 500;
-  margin-bottom: 0.125rem;
-}
-.contact .message, .contact .seen {
-  font-size: 0.9rem;
-  color: #999;
-}
-.contact .badge {
-  box-sizing: border-box;
-  position: absolute;
-  width: 1.5rem;
-  height: 1.5rem;
-  text-align: center;
-  font-size: 0.9rem;
-  padding-top: 0.125rem;
-  border-radius: 1rem;
-  top: 0;
-  left: 2.5rem;
-  background: #333;
+/* Navbar Styles */
+.navbar {
+  background: #00796b;
   color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  position: sticky;
+  top: 0;
 }
 
-.contacts {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translate(-6rem, -50%);
-  width: 24rem;
-  height: 32rem;
-  padding: 1rem 2rem 1rem 1rem;
-  box-sizing: border-box;
-  border-radius: 1rem 0 0 1rem;
-  cursor: pointer;
-  background: white;
-  box-shadow: 0 0 8rem 0 rgba(0, 0, 0, 0.1), 2rem 2rem 4rem -3rem rgba(0, 0, 0, 0.5);
-  transition: transform 500ms;
+.navbar .logo {
+  font-size: 1.2rem;
+  font-weight: bold;
 }
-.contacts h2 {
-  margin: 0.5rem 0 1.5rem 5rem;
+
+.navbar .nav-links {
+  display: flex;
+  flex-wrap: wrap;
 }
-.contacts .fa-bars {
-  position: absolute;
-  left: 2.25rem;
-  color: #999;
+
+.navbar .nav-links a {
+  color: white;
+  text-decoration: none;
+  margin: 0 0.8rem;
+  font-size: 0.9rem;
   transition: color 200ms;
 }
-.contacts .fa-bars:hover {
-  color: #666;
-}
-.contacts .contact:last-child {
-  margin: 0;
-}
-.contacts:hover {
-  transform: translate(-23rem, -50%);
+
+.navbar .nav-links a:hover {
+  color: #e0f7fa;
 }
 
-.chat {
+.navbar .logout-btn {
+  background-color: #e57373;
+  border: none;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 200ms;
+}
+
+.navbar .logout-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Sidebar Contacts */
+.contacts {
+  width: 100%;
+  max-width: 22rem;
+  height: 100%;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  border-radius: 0;
+  margin-top: 0.5rem;
   position: relative;
+}
+
+.contacts .contact {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: #f9f9f9;
+  transition: background 200ms;
+}
+
+.contacts .contact:hover {
+  background: #f1f1f1;
+}
+
+.contacts .pic {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin-right: 1rem;
+}
+
+.contacts .name {
+  font-weight: 500;
+}
+
+.contacts .message {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Chat Section */
+.chat {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 24rem;
-  height: 38rem;
-  z-index: 2;
-  box-sizing: border-box;
-  border-radius: 1rem;
-  background: white;
-  box-shadow: 0 0 8rem 0 rgba(0, 0, 0, 0.1), 0rem 2rem 4rem -3rem rgba(0, 0, 0, 0.5);
-}
-.chat .contact.bar {
-  flex-basis: 3.5rem;
-  flex-shrink: 0;
-  margin: 1rem;
-  box-sizing: border-box;
-}
-.chat .messages {
+  width: 100%;
+  max-width: 70%;
+  height: 100%;
+  margin: 0 auto;
   padding: 1rem;
-  flex-direction: column;  /* Change this to display messages from top to bottom */
-  background: #F7F7F7;
-  flex-shrink: 2;
-  overflow-y: auto;
-  box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.05), inset 0 -2rem 2rem -2rem rgba(0, 0, 0, 0.05);
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
 }
 
-.chat .messages .time {
-  font-size: 0.8rem;
-  background: #EEE;
-  padding: 0.25rem 1rem;
-  border-radius: 2rem;
-  color: #999;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content;
-  margin: 0 auto;
+.chat .messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #f7f7f7;
 }
-.chat .messages .message {
-  box-sizing: border-box;
-  padding: 0.5rem 1rem;
-  margin: 1rem;
-  background: #FFF;
-  border-radius: 1.125rem 1.125rem 1.125rem 0;
-  min-height: 2.25rem;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content;
-  max-width: 66%;
-  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.075), 0rem 1rem 1rem -1rem rgba(0, 0, 0, 0.1);
+
+.chat .message {
+  margin: 1rem 0;
+  padding: 0.8rem;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 70%;
 }
-.chat .messages .message.user {
-  margin: 1rem 1rem 1rem auto;
-  border-radius: 1.125rem 1.125rem 0 1.125rem;
-  background: #333;
+
+.chat .message.user {
+  margin-left: auto;
+  background: #00796b;
   color: white;
 }
-.chat .messages .message .typing {
-  display: inline-block;
-  width: 0.8rem;
-  height: 0.8rem;
-  margin-right: 0rem;
-  box-sizing: border-box;
-  background: #ccc;
-  border-radius: 50%;
-}
-.chat .messages .message .typing.typing-1 {
-  -webkit-animation: typing 3s infinite;
-          animation: typing 3s infinite;
-}
-.chat .messages .message .typing.typing-2 {
-  -webkit-animation: typing 3s 250ms infinite;
-          animation: typing 3s 250ms infinite;
-}
-.chat .messages .message .typing.typing-3 {
-  -webkit-animation: typing 3s 500ms infinite;
-          animation: typing 3s 500ms infinite;
-}
+
 .chat .input {
-  box-sizing: border-box;
-  flex-basis: 4rem;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 0 0.5rem 0 1.5rem;
+  padding: 0.5rem;
 }
-.chat .input i {
-  font-size: 1.5rem;
-  margin-right: 1rem;
-  color: #666;
-  cursor: pointer;
-  transition: color 200ms;
-}
-.chat .input i:hover {
-  color: #333;
-}
+
 .chat .input input {
-  border: none;
-  background-image: none;
-  background-color: white;
-  padding: 0.5rem 1rem;
-  margin-right: 1rem;
-  border-radius: 1.125rem;
-  flex-grow: 2;
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1), 0rem 1rem 1rem -1rem rgba(0, 0, 0, 0.2);
-  font-family: Red hat Display, sans-serif;
-  font-weight: 400;
-  letter-spacing: 0.025em;
+  flex-grow: 1;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 1rem;
+  margin-right: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-.chat .input input:placeholder {
-  color: #999;
+.center-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-@-webkit-keyframes typing {
-  0%, 75%, 100% {
-    transform: translate(0, 0.25rem) scale(0.9);
-    opacity: 0.5;
+.center-left {
+    width: 25%;
+    max-width: 300px;
+    background: #f1f1f1;
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 10px;
+}
+
+.center {
+    flex-grow: 1; /* Allow the chat container to expand vertically */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    max-width: 70%; /* Ensure the chat section always fills its container */
+    max-height: 100%; /* Ensure it fills the height of its parent */
+    margin: 0 auto; /* Center the section horizontally */
+}
+
+
+.chat {
+    flex-grow: 1; /* Allow the chat area to take up more space */
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Ensure the input is at the bottom */
+    height: 600px; /* Increased height for the chat section */
+    width: 800px;
+    overflow: hidden;
+}
+
+.chat .messages {
+    flex-grow: 1;
+    max-height: 600px; /* More room for chat messages */
+    overflow-y: auto; /* Enable scrolling for long chat histories */
+    background: #e8ecef;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    width: 700px;
+}
+
+.contact.bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #007bff;
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background-color: #f4f4f4; /* Optional background color */
+    border-top: 1px solid #ddd; /* Optional border */
+}
+
+.chat-input-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 900px; /* Adjust as needed */
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background-color: #fff;
+    overflow: hidden;
+    padding: 5px;
+}
+
+.chat-input {
+    flex-grow: 1;
+    border: none;
+    resize: none;
+    padding: 10px;
+    font-size: 16px;
+    line-height: 1.4;
+    outline: none;
+    max-height: 200px; /* Limit for scrollable text */
+    width: 100%;
+    overflow-y: auto; /* Scrollable when content exceeds height */
+}
+
+.chat-input::placeholder {
+    color: #aaa;
+}
+
+.icon-send {
+    background: none;
+    border: none;
+    color: #007bff;
+    padding: 0 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-send:hover {
+    color: #0056b3;
+}
+
+.icon-send i {
+    font-size: 20px;
+}
+
+
+.input button.icon-send {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+
+.typing-indicator {
+    display: none;
+    text-align: left;
+    margin-top: 10px;
+}
+
+.upload-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.upload-link {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.upload-link i {
+    margin-right: 5px;
+}
+
+.upload-link:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+
+/* Responsiveness */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  25% {
-    transform: translate(0, -0.25rem) scale(1);
-    opacity: 1;
+
+  .navbar .nav-links {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .contacts, .chat {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .contacts {
+    margin-top: 1rem;
   }
 }
 
-@keyframes typing {
-  0%, 75%, 100% {
-    transform: translate(0, 0.25rem) scale(0.9);
-    opacity: 0.5;
+@media (max-width: 480px) {
+  .navbar .nav-links a {
+    font-size: 0.8rem;
   }
-  25% {
-    transform: translate(0, -0.25rem) scale(1);
-    opacity: 1;
+
+  .contacts .pic {
+    width: 2.5rem;
+    height: 2.5rem;
   }
-}
-.pic.stark {
-  background-image: url("https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/7/73/SMH_Mentor_6.png");
-}
 
-.pic.banner {
-  background-image: url("https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/4/4f/BruceHulk-Endgame-TravelingCapInPast.jpg");
-}
-
-.pic.thor {
-  background-image: url("https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/9/98/ThorFliesThroughTheAnus.jpg");
-}
-
-.pic.danvers {
-  background-image: url("https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/0/05/HeyPeterParker.png");
-}
-
-.pic.rogers {
-  background-image: url("https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/7/7c/Cap.America_%28We_Don%27t_Trade_Lives_Vision%29.png");
+  .chat .message {
+    font-size: 0.9rem;
+  }
 }
 
   </style>
@@ -382,6 +445,30 @@ body, html {
 
 <script src="https://unpkg.com/htmx.org@1.5.0"></script>
 <script>
+  function toggleUploadLink(show) {
+    const uploadLink = document.getElementById('upload-pdf');
+    if (show) {
+        uploadLink.style.display = 'block'; // Show the link
+    } else {
+        uploadLink.style.display = 'none'; // Hide the link
+    }
+}
+</script>
+<script>
+  document.getElementById('chat-form').addEventListener('submit', function (event) {
+    const input = document.getElementById('user-input');
+    setTimeout(() => {
+        input.value = ''; // Clear the input after sending
+        input.style.height = 'auto'; // Reset height
+    }, 50);
+});
+
+// Function to adjust the textarea height automatically
+function adjustHeight(textarea) {
+    textarea.style.height = 'auto'; // Reset height to auto to shrink if needed
+    textarea.style.height = `${textarea.scrollHeight}px`; // Adjust height based on content
+}
+
   // Function to format time as 'Today at HH:MM'
   function displayCurrentTime() {
       const now = new Date();

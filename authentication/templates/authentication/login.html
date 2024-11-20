@@ -3,8 +3,8 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center mt-5">
-        <div class="col-lg-6">
-            <div class="card">
+        <div class="col-lg-6 col-md-8 col-sm-10">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">Login to HumanChat</h2>
                     <form method="post">
@@ -20,7 +20,7 @@
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                         <!-- Login Button -->
-                        <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        <button type="submit" class="btn btn-primary btn-block w-100">Login</button>
                     </form>
                     <div class="text-center mt-3">
                         <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
@@ -31,3 +31,53 @@
     </div>
 </div>
 {% endblock %}
+
+<style>
+    body {
+        background-image: url('https://picsum.photos/seed/chat-background/1920/1080');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .container {
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        width: 100%;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1rem;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
+    }
+</style>
